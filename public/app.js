@@ -23,6 +23,17 @@
     gravite: { 'securite': 'securite', 'haute': 'rouge', 'moyenne': 'orange', 'faible': '' },
     statutInc: { 'ouvert': 'rouge', 'en-cours': 'orange', 'contourne': 'orange', 'resolu': 'vert' },
   };
+  // Photos de la ligne (septembre 2026) — fichiers dans assets/photos/
+  const PHOTOS = [
+    { file: 'img_4415.jpg', machine: 'barida', caption: 'Barida ISO 6/1-C : vue d’ensemble, écran Magelis à gauche, capsuleuse à droite' },
+    { file: 'img_4416.jpg', machine: 'barida', caption: 'Étoile de remplissage et becs (canules à visser)' },
+    { file: 'img_4417.jpg', machine: 'barida', caption: 'Tête de capsulage ISO 6/1-C' },
+    { file: 'img_4410.jpg', machine: 'barida', caption: 'Écran Magelis : synoptique convoyeur / capsuleuse (mode automatique) — étiquette « SONDE3 OFF »' },
+    { file: 'img_4411.jpg', machine: 'barida', caption: 'Écran Magelis : synoptique cuve et becs (niveaux Max / Med3 / Min, vannes CO2, vide, dégazage)' },
+    { file: 'img_4412.jpg', machine: 'barida', caption: 'Détecteur de bouteilles sur le convoyeur d’entrée (33 cl en attente)' },
+    { file: 'img_4413.jpg', machine: 'barida', caption: 'Détecteur de bouteilles sur le convoyeur (câble blanc) — photo envoyée à Butrot' },
+    { file: 'img_4418.jpg', machine: 'saturateur', caption: 'Saturateur Butrot SBS 2000/12 et son armoire de commande' },
+  ];
   const TABS = [
     ['dashboard', 'Tableau de bord'], ['historique', 'Historique'], ['incidents', 'Incidents & SAV'],
     ['pieces', 'Pièces de rechange'], ['consommables', 'Consommables'], ['machines', 'Machines'], ['contacts', 'Contacts & documents'],
@@ -197,6 +208,11 @@
       }
       case 'copy-order': {
         const txt = $('#order-text').textContent; navigator.clipboard?.writeText(txt).then(() => toast('Liste copiée')); return;
+      }
+      case 'photo': {
+        const ph = PHOTOS.find((p) => p.file === ds.file); if (!ph) return;
+        $('#modal').innerHTML = `<h3><span style="font-size:15px;font-family:var(--font-body);text-transform:none;letter-spacing:0">${esc(ph.caption)}</span><button class="btn icon" type="button" id="m-close" aria-label="Fermer">✕</button></h3><img src="assets/photos/${ph.file}" alt="${esc(ph.caption)}" style="width:100%;height:auto;border-radius:10px;display:block">`;
+        $('#overlay').classList.add('show'); $('#m-close').onclick = () => $('#overlay').classList.remove('show'); return;
       }
     }
   }
@@ -388,7 +404,7 @@
         <select data-filter="inc.machine"><option value="">Toutes les machines</option>${d.machines.map((m) => `<option value="${m.id}" ${f.machine == m.id ? 'selected' : ''}>${esc(m.nom)}</option>`).join('')}</select></div>
       <div class="list">${rows.map(incidentItem).join('') || '<div class="empty">Aucun incident dans cette sélection.</div>'}</div></div>
       <div class="card"><h2><span class="pin"></span>Qui appeler chez Butrot ?</h2>
-      <div class="desc">Standard <a href="tel:+33228218080">02 28 21 80 80</a> · <a href="mailto:contact@butrot.com">contact@butrot.com</a>. Pour une panne : appeler, puis confirmer par mail avec photos/vidéo, en copie de production@brasserie-du-venasque.com. Butrot envoie un devis d'intervention (BE) à retourner signé « bon pour accord », puis planifie la visite.</div>
+      <div class="desc">Standard <a href="tel:+33228218080">02 28 21 80 80</a> · <a href="mailto:contact@butrot.com">contact@butrot.com</a>. Pour une panne : appeler, puis confirmer par mail avec photos/vidéo, en copie de production@brasserie-du-venasque.com. Butrot envoie un devis estimatif d'intervention (BE) à retourner signé « bon pour accord », puis planifie la visite. Repères tarifaires 2025-2026 : main-d'œuvre 66 à 69 € HT/h facturée au temps passé, forfait déplacement 1 115 € HT (557,50 € si déplacement groupé avec un autre client), hébergement/repas 180 € HT par jour ; compter 1 400 à 2 300 € HT par visite, pièces en sus.</div>
       <div class="grid two">${butrot.map(contactCard).join('')}</div></div>`;
   }
 
@@ -428,9 +444,16 @@
       ${rows.length ? stockTable('consommables', rows, ['Consommable', 'Usage', 'Fournisseur']) : '<div class="empty">Aucun consommable.</div>'}</div>`;
   }
 
+  function photoStrip(slug) {
+    const list = PHOTOS.filter((p) => p.machine === slug);
+    if (!list.length) return '';
+    return `<div class="photos">${list.map((p) => `<button type="button" class="photo" data-act="photo" data-file="${p.file}" title="${esc(p.caption)}"><img src="assets/photos/${p.file}" alt="${esc(p.caption)}" loading="lazy"></button>`).join('')}</div>`;
+  }
   function viewMachines() {
     const d = S.data;
-    return `<div class="card"><h2><span class="pin"></span>Fiches machines<span class="spacer"></span><button class="btn sm primary" data-act="add-machine">+ Ajouter</button></h2>
+    return `<div class="card"><h2><span class="pin"></span>Photos de la ligne</h2><div class="desc">Prises en septembre 2026. Touchez une photo pour l'agrandir. Pour en ajouter : déposer les fichiers dans <code>public/assets/photos/</code> du dépôt et compléter la liste <code>PHOTOS</code> dans <code>app.js</code>.</div>
+      <div class="photos big">${PHOTOS.map((p) => `<button type="button" class="photo" data-act="photo" data-file="${p.file}" title="${esc(p.caption)}"><img src="assets/photos/${p.file}" alt="${esc(p.caption)}" loading="lazy"><span>${esc(p.caption)}</span></button>`).join('')}</div></div>
+      <div class="card"><h2><span class="pin"></span>Fiches machines<span class="spacer"></span><button class="btn sm primary" data-act="add-machine">+ Ajouter</button></h2>
       <div class="desc">Chaîne installée par Butrot (Le Landreau, 44) en 2015 : embouteilleuse Barida, saturateur Butrot, étiqueteuse ENOS, pompes, convoyeur, air comprimé. Les fiches reprennent les factures de 2015 et les échanges depuis 2023.</div>
       <div class="list">${d.machines.map((m) => {
         const key = 'mac' + m.id; const open = S.openItems.has(key);
@@ -439,7 +462,7 @@
         const pcs = d.pieces.filter((p) => p.machine_id === m.id);
         return `<div class="item ${open ? 'open' : ''}" data-key="${key}"><div class="top"><div class="date">${m.annee || ''}</div><div style="flex:1"><div class="title">${esc(m.nom)}</div>
           <div class="badges">${badge([m.marque, m.modele].filter(Boolean).join(' · '))}${m.numero_serie ? badge('n° ' + m.numero_serie, 'bleu') : ''}${m.actif === 0 ? badge('Hors service', 'rouge') : ''}${badge(`${ints.length} intervention${ints.length > 1 ? 's' : ''}`)}${incs.length ? badge(`${incs.length} incident${incs.length > 1 ? 's' : ''}`, 'orange') : ''}${pcs.length ? badge(`${pcs.length} pièce${pcs.length > 1 ? 's' : ''}`) : ''}</div></div></div>
-          <div class="body">${m.description ? `<p>${esc(m.description)}</p>` : ''}<dl class="kv">${m.fournisseur ? `<dt>Fournisseur</dt><dd>${esc(m.fournisseur)}</dd>` : ''}${m.notes ? `<dt>Notes</dt><dd>${esc(m.notes)}</dd>` : ''}${ints.length ? `<dt>Historique</dt><dd>${ints.slice(0, 6).map((i) => `<a href="#" data-goto="historique" data-open="int${i.id}">${fmtDate(i.date)} · ${esc(i.titre)}</a>`).join('<br>')}${ints.length > 6 ? `<br><span class="muted">… et ${ints.length - 6} autre(s) dans l'historique</span>` : ''}</dd>` : ''}</dl>
+          <div class="body">${m.description ? `<p>${esc(m.description)}</p>` : ''}${photoStrip(m.slug)}<dl class="kv">${m.fournisseur ? `<dt>Fournisseur</dt><dd>${esc(m.fournisseur)}</dd>` : ''}${m.notes ? `<dt>Notes</dt><dd>${esc(m.notes)}</dd>` : ''}${ints.length ? `<dt>Historique</dt><dd>${ints.slice(0, 6).map((i) => `<a href="#" data-goto="historique" data-open="int${i.id}">${fmtDate(i.date)} · ${esc(i.titre)}</a>`).join('<br>')}${ints.length > 6 ? `<br><span class="muted">… et ${ints.length - 6} autre(s) dans l'historique</span>` : ''}</dd>` : ''}</dl>
           <div class="actions"><button class="btn sm" data-act="edit" data-table="machines" data-id="${m.id}">✎ Modifier la fiche</button><button class="btn sm" data-act="add-intervention" data-machine="${m.id}">🔧 Intervention</button><button class="btn sm" data-act="add-incident" data-machine="${m.id}">🚨 Problème</button><button class="btn sm" data-act="add-piece" data-machine="${m.id}">🔩 Pièce</button></div></div></div>`;
       }).join('')}</div></div>`;
   }
