@@ -1,0 +1,15 @@
+name = "brasserie-embouteillage"
+compatibility_date = "2025-06-01"
+pages_build_output_dir = "public"
+
+# Base D1 : à créer une fois dans Cloudflare (Workers & Pages → D1 → Create database → « brasserie-embouteillage »)
+# puis lier au projet Pages (Settings → Bindings → D1 database, variable name : DB).
+# Pour le développement local : npx wrangler pages dev  (une base D1 locale est créée automatiquement)
+[[d1_databases]]
+binding = "DB"
+database_name = "brasserie-embouteillage"
+database_id = "a-renseigner-apres-creation"
+
+# Code d'accès de l'équipe (en production : Settings → Variables and Secrets → ACCESS_CODE)
+[vars]
+ACCESS_CODE = "venasque"
